@@ -18,16 +18,11 @@ create table Trabalha (
     unique(id_empresa, id_pessoa));
 */
 
--- Pega o nome das colunas que são chaves prmárias.
-SELECT relname, attname
-FROM pg_index
-INNER JOIN pg_class ON indrelid = oid
+-- Pega o nome das colunas que são chaves primárias ou estrangeiras.
+SELECT relname "Nome da Tabela", attname "Nome da Coluna", contype "Tipo"
+FROM pg_constraint
+INNER JOIN pg_class ON conrelid = pg_class.oid
 INNER JOIN pg_attribute ON attrelid = pg_class.oid
-WHERE indisprimary = true
-AND
-(
-	relname = 'pessoa'
-	OR relname = 'empresa'
-	OR relname = 'trabalha'
-)
-AND attnum = ANY (indkey);
+WHERE
+	(contype = 'p' OR contype = 'f')
+	AND attnum = ANY (conkey);
