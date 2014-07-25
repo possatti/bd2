@@ -27,14 +27,18 @@ WHERE
 	(contype = 'p' OR contype = 'f')
 	AND attnum = ANY (conkey);
 
-------------
 
-SELECT relname, attname, typname, attlen, attnotnull, atthasdef
-, adsrc
+-- 2)
+SELECT relname "Tabela", attname "Coluna", typname "Tipo",
+	attlen "Tamanho do Tipo", attnotnull "É not null?",
+	atthasdef "Tem default?", adsrc "Default",
+	(contype IS NOT NULL AND contype = 'f') "É fkey?",
+	(SELECT relname FROM pg_class WHERE pg_class.oid = confrelid) "Tabela referenciada"
 FROM pg_class
 INNER JOIN pg_attribute ON attrelid = pg_class.oid
 INNER JOIN pg_type ON atttypid = pg_type.oid
 LEFT JOIN pg_attrdef ON pg_class.oid = adrelid AND adnum = attnum
+LEFT JOIN pg_constraint ON pg_class.oid = conrelid AND attnum = ANY (conkey)
 WHERE
 (
 	relname = 'pessoa'
@@ -50,3 +54,10 @@ AND
 	AND attname != 'ctid'
 	AND attname != 'tableoid'
 )
+AND
+(
+	contype IS NULL
+	OR contype = 'p'
+	OR contype = 'f'
+)
+ORDER BY relname, attname;
